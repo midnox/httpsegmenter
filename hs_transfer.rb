@@ -60,7 +60,7 @@ class HSTransfer
           begin
             create_index_and_run_transfer(value)
           rescue
-            @log.error("Error running transfer: " + $!)
+            @log.error("Error running transfer: #{$!}")
           end
         end
 
@@ -156,7 +156,7 @@ class HSTransfer
 
      case transfer_config['transfer_type']
        when 'copy'
-         File.copy(source_file, transfer_config['directory'] + '/' + destination_file)
+         File.copy(source_file, "#{transfer_config['directory']}/#{destination_file}")
        when 'ftp'
          require 'net/ftp'
          if transfer_config['remote_host'].kind_of?(Array)
@@ -177,9 +177,9 @@ class HSTransfer
        when 'scp'
          require 'net/scp'
          if transfer_config.has_key?('password')
-           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, transfer_config['directory'] + '/' + destination_file, :password => transfer_config['password'])
+           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, "#{transfer_config['directory']}/#{destination_file}", :password => transfer_config['password'])
          else
-           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, transfer_config['directory'] + '/' + destination_file)
+           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, "#{transfer_config['directory']}/#{destination_file}")
          end
        when 's3'
          require 'right_aws'
