@@ -60,7 +60,7 @@ class HSTransfer
           begin
             create_index_and_run_transfer(value)
           rescue
-            @log.error("Error running transfer: #{$!}")
+            @log.error("Error running transfer: #{$!}: #{$@}")
           end
         end
 
