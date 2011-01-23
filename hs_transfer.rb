@@ -156,7 +156,7 @@ class HSTransfer
 
      case transfer_config['transfer_type']
        when 'copy'
-         File.copy(source_file, "#{transfer_config['directory']}/#{destination_file}")
+         FileUtils.copy(source_file, "#{transfer_config['directory']}/#{destination_file}")
        when 'ftp'
          require 'net/ftp'
          if transfer_config['remote_host'].kind_of?(Array)
