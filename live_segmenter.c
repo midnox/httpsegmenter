@@ -159,11 +159,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-#if LIBAVFORMAT_VERSION_MAJOR >= 52 && LIBAVFORMAT_VERSION_MINOR >= 45
   AVOutputFormat *output_format = av_guess_format("mpegts", NULL, NULL);
-#else
-  AVOutputFormat *output_format = guess_format("mpegts", NULL, NULL);
-#endif
   if (!output_format) 
   {
     fprintf(stderr, "Segmenter error: Could not find MPEG-TS muxer\n");
@@ -211,7 +207,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  dump_format(output_context, 0, config.filename_prefix, 1);
+  av_dump_format(output_context, 0, config.filename_prefix, 1);
 
   if(video_index >= 0)
   {
