@@ -264,7 +264,7 @@ int main(int argc, char **argv)
       break;
     }
 
-    if (packet.stream_index == video_index && (packet.flags & PKT_FLAG_KEY)) 
+    if (packet.stream_index == video_index && (packet.flags & AV_PKT_FLAG_KEY))
     {
       segment_time = (double)video_stream->pts.val * video_stream->time_base.num / video_stream->time_base.den;
     }
