@@ -229,7 +229,7 @@ int main(int argc, char **argv)
 
   unsigned int output_index = 1;
   snprintf(output_filename, strlen(config.temp_directory) + 1 + strlen(config.filename_prefix) + 10, "%s/%s-%05u.ts", config.temp_directory, config.filename_prefix, output_index++);
-  if (url_fopen(&output_context->pb, output_filename, URL_WRONLY) < 0) 
+  if (avio_open(&output_context->pb, output_filename, URL_WRONLY) < 0)
   {
     fprintf(stderr, "Segmenter error: Could not open '%s'\n", output_filename);
     exit(1);
@@ -280,13 +280,13 @@ int main(int argc, char **argv)
     // done writing the current file?
     if (segment_time - prev_segment_time >= config.segment_length) 
     {
-      put_flush_packet(output_context->pb);
-      url_fclose(output_context->pb);
+      avio_flush(output_context->pb);
+      avio_close(output_context->pb);
 
       output_transfer_command(first_segment, ++last_segment, 0, config.encoding_profile);
 
       snprintf(output_filename, strlen(config.temp_directory) + 1 + strlen(config.filename_prefix) + 10, "%s/%s-%05u.ts", config.temp_directory, config.filename_prefix, output_index++);
-      if (url_fopen(&output_context->pb, output_filename, URL_WRONLY) < 0) 
+      if (avio_open(&output_context->pb, output_filename, URL_WRONLY) < 0)
       {
         fprintf(stderr, "Segmenter error: Could not open '%s'\n", output_filename);
         break;
@@ -323,7 +323,7 @@ int main(int argc, char **argv)
     av_freep(&output_context->streams[i]);
   }
 
-  url_fclose(output_context->pb);
+  avio_close(output_context->pb);
   av_free(output_context);
 
   output_transfer_command(first_segment, ++last_segment, 1, config.encoding_profile);
