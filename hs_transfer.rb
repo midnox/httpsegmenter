@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+# Added multiple ftp server support! But still can cause error 'cause i am not checking anything...
+
 require 'rubygems'
 
 class HSTransfer
