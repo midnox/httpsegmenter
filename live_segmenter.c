@@ -21,7 +21,38 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "libavformat/avformat.h"
+#include <libavutil/avutil.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+
+
+#if LIBAVFORMAT_VERSION_MAJOR < 53
+#ifndef av_guess_format
+#define av_guess_format guess_format
+#endif
+#ifndef AVMEDIA_TYPE_AUDIO
+#define AVMEDIA_TYPE_AUDIO CODEC_TYPE_AUDIO
+#define AVMEDIA_TYPE_VIDEO CODEC_TYPE_VIDEO
+#endif
+#ifndef avio_open
+#define avio_open url_fopen
+#define avio_close url_fclose
+#endif
+#ifndef avio_flush
+#define avio_flush put_flush_packet
+#endif
+#endif
+#if LIBAVFORMAT_VERSION_MAJOR < 54
+#ifndef av_dump_format
+#define av_dump_format dump_format
+#endif
+#endif
+
+#if LIBAVCODEC_VERSION_MAJOR < 53
+#ifndef AV_PKT_FLAG_KEY
+#define AV_PKT_FLAG_KEY PKT_FLAG_KEY
+#endif
+#endif
 
 struct config_info
 {
