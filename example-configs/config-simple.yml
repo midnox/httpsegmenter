@@ -34,7 +34,7 @@ segmenter_binary: './live_segmenter'
 encoding_profile: 'ep_128k'
 
 # The upload profile to use
-transfer_profile: 'ftp_dev'
+transfer_profile: 'copy_dev'
 
 #
 # Encoding profiles
@@ -61,8 +61,15 @@ s3_dev:
   aws_api_key: 'key'
   aws_api_secret: 'secret'
 
-## Multiple ftp server example:
 ftp_dev:
+  transfer_type: 'ftp'
+  remote_host: '192.168.1.1'
+  user_name: 'user'
+  password: 'pass'
+  directory: 'html/streamingvideo'
+
+## Multiple ftp server example:
+multi_ftp_dev:
   transfer_type: 'ftp'
   remote_host: ['first-server.com', 'second-server.com']
   user_name: ['firstserveruser', 'seconduserserver']
