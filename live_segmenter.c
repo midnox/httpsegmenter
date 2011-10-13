@@ -52,6 +52,9 @@
 #ifndef avformat_find_stream_info
 #define avformat_find_stream_info(s, opt) av_find_stream_info(s)
 #endif
+#ifndef avformat_write_header
+#define avformat_write_header(s, opt) av_write_header(s)
+#endif
 #endif
 #if LIBAVCODEC_VERSION_MAJOR < 53
 #ifndef AV_PKT_FLAG_KEY
@@ -257,11 +260,13 @@ int main(int argc, char **argv)
 		}
 	}
 
+#if LIBAVFORMAT_VERSION_MAJOR < 54
 	if (av_set_parameters(output_context, NULL) < 0) {
 		fprintf(stderr,
 			"Segmenter error: Invalid output format parameters\n");
 		exit(1);
 	}
+#endif
 
 	av_dump_format(output_context, 0, config.filename_prefix, 1);
 
@@ -297,7 +302,7 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (av_write_header(output_context)) {
+	if (avformat_write_header(output_context, NULL)) {
 		fprintf(stderr,
 			"Segmenter error: Could not write mpegts header to first output file\n");
 		exit(1);
