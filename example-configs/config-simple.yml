@@ -34,7 +34,7 @@ segmenter_binary: './live_segmenter'
 encoding_profile: 'ep_128k'
 
 # The upload profile to use
-transfer_profile: 'copy_dev'
+transfer_profile: 'ftp_dev'
 
 #
 # Encoding profiles
@@ -61,12 +61,14 @@ s3_dev:
   aws_api_key: 'key'
   aws_api_secret: 'secret'
 
+## Multiple ftp server example:
 ftp_dev:
   transfer_type: 'ftp'
-  remote_host: '192.168.1.1'
-  user_name: 'user'
-  password: 'pass'
-  directory: 'html/streamingvideo'
+  remote_host: ['first-server.com', 'second-server.com']
+  user_name: ['firstserveruser', 'seconduserserver']
+  password: ['firstserverpass', 'secondserverpass']
+  directory: ['first/server/dir', 'second/server/dir']
+### If the remote_host is an array, all the other (user_name, password, directory) has to be arrays to, and has to have the same item number as the remote_host array, else it won't work and bad things will happen!
 
 scp_dev:
   transfer_type: 'scp'

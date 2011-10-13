@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+# Added multiple ftp server support! But still can cause error 'cause i am not checking anything...
+
 require 'rubygems'
 
 class HSTransfer
@@ -166,11 +168,21 @@ class HSTransfer
          FileUtils.copy(source_file, "#{transfer_config['directory']}/#{destination_file}")
        when 'ftp'
          require 'net/ftp'
-         Net::FTP.open(transfer_config['remote_host']) do |ftp|
-           ftp.login(transfer_config['user_name'], transfer_config['password'])
-           files = ftp.chdir(transfer_config['directory'])
-           ftp.putbinaryfile(source_file, destination_file)
-         end
+         if transfer_config['remote_host'].kind_of?(Array)
+         	0.upto(transfer_config['remote_host'].length-1) do | zahl |
+         		Net::FTP.open(transfer_config['remote_host'][zahl]) do |ftp|
+           		ftp.login(transfer_config['user_name'][zahl], transfer_config['password'][zahl])
+           		files = ftp.chdir(transfer_config['directory'][zahl])
+           		ftp.putbinaryfile(source_file, destination_file)
+           		end
+           	end
+        else
+           	Net::FTP.open(transfer_config['remote_host']) do |ftp|
+           	ftp.login(transfer_config['user_name'], transfer_config['password'])
+           	files = ftp.chdir(transfer_config['directory'])
+           	ftp.putbinaryfile(source_file, destination_file)
+		end
+		end
        when 'scp'
          require 'net/scp'
          if transfer_config.has_key?('password')
