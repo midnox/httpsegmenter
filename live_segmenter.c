@@ -55,6 +55,9 @@
 #ifndef avformat_write_header
 #define avformat_write_header(s, opt) av_write_header(s)
 #endif
+#ifndef AVIO_FLAG_WRITE
+#define AVIO_FLAG_WRITE URL_WRONLY
+#endif
 #endif
 #if LIBAVCODEC_VERSION_MAJOR < 53
 #ifndef AV_PKT_FLAG_KEY
@@ -301,7 +304,7 @@ int main(int argc, char **argv)
 		 strlen(config.temp_directory) + 1 +
 		 strlen(config.filename_prefix) + 10, "%s/%s-%05u.ts",
 		 config.temp_directory, config.filename_prefix, output_index++);
-	if (avio_open(&output_context->pb, output_filename, URL_WRONLY) < 0) {
+	if (avio_open(&output_context->pb, output_filename, AVIO_FLAG_WRITE) < 0) {
 		fprintf(stderr, "Segmenter error: Could not open '%s'\n",
 			output_filename);
 		exit(1);
@@ -375,7 +378,7 @@ int main(int argc, char **argv)
 				 config.filename_prefix, output_index++);
 			if (avio_open
 			    (&output_context->pb, output_filename,
-			     URL_WRONLY) < 0) {
+			     AVIO_FLAG_WRITE) < 0) {
 				fprintf(stderr,
 					"Segmenter error: Could not open '%s'\n",
 					output_filename);
