@@ -49,6 +49,9 @@
 #ifndef avformat_open_input
 #define avformat_open_input(s, fn, fmt, opt) av_open_input_file(s, fn, fmt, 0, opt)
 #endif
+#ifndef avformat_find_stream_info
+#define avformat_find_stream_info(s, opt) av_find_stream_info(s)
+#endif
 #endif
 
 #if LIBAVCODEC_VERSION_MAJOR < 53
@@ -187,7 +190,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  if (av_find_stream_info(input_context) < 0) 
+  if (avformat_find_stream_info(input_context, NULL) < 0)
   {
     fprintf(stderr, "Segmenter error: Could not read stream information\n");
     exit(1);
