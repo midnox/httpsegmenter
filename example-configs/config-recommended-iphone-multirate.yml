@@ -31,7 +31,7 @@ source_command: 'cat %s'
 segmenter_binary: './live_segmenter'
 
 # the encoding profile to use
-encoding_profile: [ 'cell_16x9_150k', 'cell_16x9_240k', 'cell_16x9_440k', 'wifi_16x9_640k' ]
+encoding_profile: [ 'cell_150k', 'cell_240k', 'cell_440k', 'wifi_640k' ]
 
 # The upload profile to use
 transfer_profile: 'copy_dev'
@@ -39,20 +39,20 @@ transfer_profile: 'copy_dev'
 #
 # Encoding profiles
 #
-cell_16x9_150k: 
-  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=416:-1 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 110k -maxrate 110k -bufsize 110k -r 10 -keyint_min 10 -g 30 -async 2 - | %s %s %s %s %s"
+cell_150k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 110k -maxrate 110k -bufsize 110k -r 10 -keyint_min 10 -g 30 -async 2 - | %s %s %s %s %s"
   bandwidth: 158000
 
-cell_16x9_240k:
-  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=416:-1 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 200k -maxrate 200k -bufsize 200k -r 12 -keyint_min 12 -g 45 -async 2 - | %s %s %s %s %s"
+cell_240k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 200k -maxrate 200k -bufsize 200k -r 12 -keyint_min 12 -g 45 -async 2 - | %s %s %s %s %s"
   bandwidth: 248000
 
-cell_16x9_440k:
-  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=416:-1 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 400k -maxrate 400k -bufsize 400k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
+cell_440k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 400k -maxrate 400k -bufsize 400k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
   bandwidth: 448000
 
-wifi_16x9_640k:
-  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=640:-1 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 600k -maxrate 600k -bufsize 600k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
+wifi_640k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=640:ow/sar/dar+.5 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 600k -maxrate 600k -bufsize 600k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
   bandwidth: 648000
 
 #
