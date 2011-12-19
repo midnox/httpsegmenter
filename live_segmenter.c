@@ -156,8 +156,8 @@ int main(int argc, char **argv)
 	}
 
 	AVFormatContext *input_context = NULL;
-	int ret = av_open_input_file(&input_context, config.input_filename,
-				     input_format, 0, NULL);
+	int ret = avformat_open_input(&input_context, config.input_filename,
+				     input_format, NULL);
 	if (ret != 0) {
 		fprintf(stderr,
 			"Segmenter error: Could not open input file, make sure it is an mpegts file: %d\n",
