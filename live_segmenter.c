@@ -243,11 +243,11 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (video_st->codec->ticks_per_frame > 1) {
+	if (video_stream->codec->ticks_per_frame > 1) {
 		// h264 sets the ticks_per_frame and time_base.den but not time_base.num
 		// since we don't use ticks_per_frame, adjust time_base.num accordingly.
-		video_st->codec->time_base.num *=
-		    video_st->codec->ticks_per_frame;
+		video_stream->codec->time_base.num *=
+		    video_stream->codec->ticks_per_frame;
 	}
 
 	unsigned int output_index = 1;
