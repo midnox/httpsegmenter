@@ -61,6 +61,11 @@
 #define AV_PKT_FLAG_KEY PKT_FLAG_KEY
 #endif
 #endif
+#if LIBAVCODEC_VERSION_MAJOR < 54
+#ifndef avcodec_open2
+#define avcodec_open2(s, c, o) avcodec_open(s, c)
+#endif
+#endif
 
 struct config_info {
 	const char *input_filename;
@@ -278,7 +283,7 @@ int main(int argc, char **argv)
 				"Segmenter error: Could not find video decoder, key frames will not be honored\n");
 		}
 
-		if (avcodec_open(video_stream->codec, codec) < 0) {
+		if (avcodec_open2(video_stream->codec, codec, NULL) < 0) {
 			fprintf(stderr,
 				"Segmenter error: Could not open video decoder, key frames will not be honored\n");
 		}
