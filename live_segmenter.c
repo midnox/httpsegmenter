@@ -46,8 +46,10 @@
 #ifndef av_dump_format
 #define av_dump_format dump_format
 #endif
+#ifndef avformat_open_input
+#define avformat_open_input(s, fn, fmt, opt) av_open_input_file(s, fn, fmt, 0, opt)
 #endif
-
+#endif
 #if LIBAVCODEC_VERSION_MAJOR < 53
 #ifndef AV_PKT_FLAG_KEY
 #define AV_PKT_FLAG_KEY PKT_FLAG_KEY
