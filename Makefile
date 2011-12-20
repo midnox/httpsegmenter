@@ -12,4 +12,4 @@ live_segmenter: live_segmenter.o
 	$(CC) $(CFLAGS) $(LIBAVCFLAGS) $< -o $@ $(LDFLAGS) $(LAVLDFLAGS)
 
 clean:
-	rm -f live_segmenter
+	rm -f live_segmenter live_segmenter.o
