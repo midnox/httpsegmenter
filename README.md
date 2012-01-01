@@ -31,6 +31,12 @@ You will need to compile the segmenter first. Assuming that you have all the nee
 
 You may copy the script and the segmenter binary to any location you want. You will need to let the script know where to find the segmenter binary in the configuration file.
 
+### DEPENDENCIES
+
+On Ubuntu/Debian systems:
+
+$ sudo apt-get install libavutil-dev libavformat-dev
+
 ## CONFIGURATION
 
 A quick overview of the configuration options:
