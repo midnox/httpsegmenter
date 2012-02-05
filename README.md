@@ -3,7 +3,7 @@ iPhone HTTP Streaming Server
 
 ABOUT THIS FORK
 ===============
-segmented.c and the corresponding Makefile add support for the latest FFMPEG. This brings benefits such as adding support for ProRes and the new features that come along with the latest FFMPG.
+segmenter.c and the corresponding Makefile add support for the latest FFMPEG. This brings benefits such as adding support for ProRes and the new features that come along with the latest FFMPG.
 
 Please feel free to modify and in case there are any issues please feel free to create a pull request. I hope the segmenter.c update will be useful. 
 
