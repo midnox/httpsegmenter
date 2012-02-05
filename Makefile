@@ -1,5 +1,17 @@
+FFLIBS=`pkg-config --libs libavformat libavcodec libavutil`
+FFFLAGS=`pkg-config --cflags libavformat libavcodec libavutil`
+
 all:
-	gcc -Wall -g live_segmenter.c -o live_segmenter -lavformat -lavcodec -lavutil -lbz2 -lm -lz -lfaac -lmp3lame -lx264 -lfaad -lpthread
+	gcc -Wall -g segmenter.c -o segmenter ${FFFLAGS} ${FFLIBS}
+
+old_ffmpeg:
+	gcc -Wall -g segmenter.c -o segmenter -lavformat -lavcodec -lavutil -lm -o build/debug/segmenter
 
 clean:
-	rm -f live_segmenter
+	rm -f segmenter
+
+install: segmenter
+	cp segmenter /usr/local/bin/
+
+uninstall:
+	rm /usr/local/bin/segmenter

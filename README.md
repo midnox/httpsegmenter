@@ -1,6 +1,39 @@
 iPhone HTTP Streaming Server
 ============================
 
+ABOUT THIS FORK
+===============
+segmented.c and the corresponding Makefile add support for the latest FFMPEG. This brings benefits such as adding support for ProRes and the new features that come along with the latest FFMPG.
+
+Please feel free to modify and in case there are any issues please feel free to create a pull request. I hope the segmenter.c update will be useful. 
+
+HOW TO COMPILE
+==============
+Install latest FFMPEG version and go to the directory where the segmented.c and Makefile are located.
+$ make
+$ make install
+
+Note: You might want to rename the file to live_segmenter after installation.
+
+Example usage:
+$ segmenter --i infile --d baseDir --f baseFileName --o playListFile.m3u8 --l 10 
+
+Options: 
+--i <infile>.
+--o <outfile>.
+--d basedir, the base directory for files.
+--f baseFileName, output files will be baseFileName-#.
+--l segment length, the length of each segment.
+--a,  audio only decode for < 64k streams.
+--v,  video only decode for < 64k streams.
+--version, print version details and exit. 
+
+The following example will take out.ts and create segments from it on stream.m3u8
+Eg. segmenter --i out.ts --l 10 --o stream.m3u8 --d segments --f stream
+
+ORIGINAL PROJECT INFO
+============================
+
 For a detailed overview see the [http live video segmenter](http://www.ioncannon.net/projects/http-live-video-stream-segmenter-and-distributor/) page.
 
 ## DESCRIPTION
