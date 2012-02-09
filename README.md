@@ -1,4 +1,4 @@
-# iPhone HTTP Streaming Server
+# iPhone HTTP Streaming Server and Segmenter
 
 ## ABOUT THIS FORK
 
@@ -8,7 +8,7 @@ Please feel free to modify and in case there are any issues please feel free to 
 
 ## HOW TO COMPILE
 
-Install latest FFMPEG version, cmake 2.6+ and go to the directory where the segmented.c and CMakeLists.txt are located.
+Install latest FFMPEG version, cmake 2.6+ and go to the directory where the segmenter.c and CMakeLists.txt are located.
 
  $ cmake .  
  $ make  
