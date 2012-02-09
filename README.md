@@ -1,38 +1,24 @@
-iPhone HTTP Streaming Server
-============================
+# iPhone HTTP Streaming Server
 
-ABOUT THIS FORK
-===============
-segmenter.c and the corresponding Makefile add support for the latest FFMPEG. This brings benefits such as adding support for ProRes and the new features that come along with the latest FFMPG.
+## ABOUT THIS FORK
+
+segmenter.c and the corresponding cmake files  add support for the latest FFMPEG. This brings benefits such as adding support for ProRes and the new features that come along with the latest FFMPG.
 
 Please feel free to modify and in case there are any issues please feel free to create a pull request. I hope the segmenter.c update will be useful. 
 
-HOW TO COMPILE
-==============
-Install latest FFMPEG version and go to the directory where the segmented.c and Makefile are located.
-$ make
-$ make install
+## HOW TO COMPILE
 
-Note: You might want to rename the file to live_segmenter after installation.
+Install latest FFMPEG version, cmake 2.6+ and go to the directory where the segmented.c and CMakeLists.txt are located.
 
-Example usage:
-$ segmenter --i infile --d baseDir --f baseFileName --o playListFile.m3u8 --l 10 
+ $ cmake .  
+ $ make  
+ $ make install  
 
-Options: 
---i <infile>.
---o <outfile>.
---d basedir, the base directory for files.
---f baseFileName, output files will be baseFileName-#.
---l segment length, the length of each segment.
---a,  audio only decode for < 64k streams.
---v,  video only decode for < 64k streams.
---version, print version details and exit. 
+Note: You might want to rename the file to live_segmenter after compilation/installation.
 
-The following example will take out.ts and create segments from it on stream.m3u8
-Eg. segmenter --i out.ts --l 10 --o stream.m3u8 --d segments --f stream
+for example usage try segmenter -h
 
-ORIGINAL PROJECT INFO
-============================
+# ORIGINAL PROJECT INFO
 
 For a detailed overview see the [http live video segmenter](http://www.ioncannon.net/projects/http-live-video-stream-segmenter-and-distributor/) page.
 
@@ -152,15 +138,15 @@ Transfer profiles are given a name in the same way encoding profiles are and hav
 
 Copyright (c) 2009 Carson McDonald
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License version 2
-as published by the Free Software Foundation.
+This program is free software; you can redistribute it and/or  
+modify it under the terms of the GNU General Public License version 2  
+as published by the Free Software Foundation.  
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,  
+but WITHOUT ANY WARRANTY; without even the implied warranty of  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the  
+GNU General Public License for more details.  
 
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+You should have received a copy of the GNU General Public License  
+along with this program; if not, write to the Free Software  
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.  
