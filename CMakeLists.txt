@@ -5,4 +5,4 @@ include(detectFFMpeg.cmake)
 
 
 add_executable(segmenter segmenter.c)
-target_link_libraries(segmenter avformat avcodec avutil ${FFMPEG_LIBS})
+target_link_libraries(segmenter -lavformat -lavcodec -lavutil ${FFMPEG_LIBS})

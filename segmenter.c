@@ -759,7 +759,7 @@ int main(int argc, const char *argv[]) {
 
     snprintf(currentOutputFileName, strlen(baseDirName) + strlen(baseFileName) + strlen(baseFileExtension) + 10, "%s%s-%u%s", baseDirName, baseFileName, output_index++, baseFileExtension);
 
-    if (avio_open(&oc->pb, currentOutputFileName, URL_WRONLY) < 0) {
+    if (avio_open(&oc->pb, currentOutputFileName,AVIO_FLAG_WRITE) < 0) {
         fprintf(stderr, "Could not open '%s'.\n", currentOutputFileName);
         exit(1);
     }
@@ -835,7 +835,7 @@ int main(int argc, const char *argv[]) {
             output_bytes += st.st_size;
 
             snprintf(currentOutputFileName, strlen(baseDirName) + strlen(baseFileName) + strlen(baseFileExtension) + 10, "%s%s-%u%s", baseDirName, baseFileName, output_index++, baseFileExtension);
-            if (avio_open(&oc->pb, currentOutputFileName, URL_WRONLY) < 0) {
+            if (avio_open(&oc->pb, currentOutputFileName, AVIO_FLAG_WRITE) < 0) {
                 fprintf(stderr, "Could not open '%s'\n", currentOutputFileName);
                 break;
             }
