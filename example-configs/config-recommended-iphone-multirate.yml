@@ -10,7 +10,8 @@ log_type: 'STDOUT'
 log_level: 'DEBUG'
 
 # where the origin video is going to come from
-input_location: 'http://localhost:8080/'
+#input_location: '-'
+input_location: '/tmp/test.avi'
 
 # segment length in seconds
 segment_length: 10 
@@ -18,21 +19,19 @@ segment_length: 10
 # this is the URL where the stream (ts) files will end up
 # if this location is the same as the location where the m3u8 
 # index is then leave it blank
-# url_prefix: ''
-url_prefix: 'http://192.168.1.1/streamingvideo/'
+url_prefix: 
 
 # how many segments to keep in the index
 index_segment_count: 15
 
 # this command is used for multirate encodings and is what pushes the encoders
-source_command: 'ffmpeg -er 4 -y -i %s -vcodec copy -acodec copy -f ogg -'
+source_command: 'cat %s'
 
 # This is the location of the segmenter
 segmenter_binary: './live_segmenter'
 
 # the encoding profile to use
-#encoding_profile: [ 'ep_192k' ] # <- you can force this to do two passes if you want
-encoding_profile: 'ep_192k'
+encoding_profile: [ 'cell_150k', 'cell_240k', 'cell_440k', 'wifi_640k' ]
 
 # The upload profile to use
 transfer_profile: 'copy_dev'
@@ -40,17 +39,21 @@ transfer_profile: 'copy_dev'
 #
 # Encoding profiles
 #
-ep_192k:
-  ffmpeg_command: "ffmpeg -er 4 -y -i %s -f mpegts -acodec libmp3lame -ab 64k -vf scale=320:240 -vcodec libx264 -threads 0 -preset fast -b 128k -maxrate 128k -bufsize 128k -g 30 -async 2 - | %s %s %s %s %s"
-  bandwidth: 192000
+cell_150k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 110k -maxrate 110k -bufsize 110k -r 10 -keyint_min 10 -g 30 -async 2 - | %s %s %s %s %s"
+  bandwidth: 158000
 
-ep_348k:
-  ffmpeg_command: "ffmpeg -er 4 -y -i %s -f mpegts -acodec libmp3lame -ab 96k -vf scale=320:240 -vcodec libx264 -threads 0 -preset fast -b 256k -maxrate 256k -bufsize 256k -g 30 -async 2 - | %s %s %s %s %s"
-  bandwidth: 348000
+cell_240k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 200k -maxrate 200k -bufsize 200k -r 12 -keyint_min 12 -g 45 -async 2 - | %s %s %s %s %s"
+  bandwidth: 248000
 
-ep_576k:
-  ffmpeg_command: "ffmpeg -er 4 -y -i %s -f mpegts -acodec libmp3lame -ab 128k -vf scale=320:240 -vcodec libx264 -threads 0 -preset fast -b 448k -maxrate 448k -bufsize 448k -g 30 -async 2 - | %s %s %s %s %s"
-  bandwidth: 576000
+cell_440k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale='trunc(24+(sar*dar)+.5)*16:ow/dar/sar+.5' -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 400k -maxrate 400k -bufsize 400k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
+  bandwidth: 448000
+
+wifi_640k:
+  ffmpeg_command: "ffmpeg -er 4 -i %s -f mpegts -acodec libmp3lame -ar 32000 -ab 48k -vf scale=640:ow/sar/dar+.5 -vcodec libx264 -threads 0 -profile baseline -level 30 -preset medium -b 600k -maxrate 600k -bufsize 600k -keyint_min 25 -g 90 -async 2 - | %s %s %s %s %s"
+  bandwidth: 648000
 
 #
 # Transfer profiles

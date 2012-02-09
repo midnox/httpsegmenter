@@ -16,6 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+# Added multiple ftp server support! But still can cause error 'cause i am not checking anything...
+
 require 'rubygems'
 
 class HSTransfer
@@ -58,7 +60,7 @@ class HSTransfer
           begin
             create_index_and_run_transfer(value)
           rescue
-            @log.error("Error running transfer: " + $!)
+            @log.error("Error running transfer: #{$!}: #{$@}")
           end
         end
 
@@ -89,6 +91,15 @@ class HSTransfer
   def self.can_s3
     begin
       require 'right_aws'
+      return true
+    rescue LoadError
+      return false
+    end
+  end
+  
+  def self.can_cf
+    begin
+      require 'cloudfiles'
       return true
     rescue LoadError
       return false
@@ -154,20 +165,30 @@ class HSTransfer
 
      case transfer_config['transfer_type']
        when 'copy'
-         File.copy(source_file, transfer_config['directory'] + '/' + destination_file)
+         FileUtils.copy(source_file, "#{transfer_config['directory']}/#{destination_file}")
        when 'ftp'
          require 'net/ftp'
-         Net::FTP.open(transfer_config['remote_host']) do |ftp|
-           ftp.login(transfer_config['user_name'], transfer_config['password'])
-           files = ftp.chdir(transfer_config['directory'])
-           ftp.putbinaryfile(source_file, destination_file)
-         end
+         if transfer_config['remote_host'].kind_of?(Array)
+         	0.upto(transfer_config['remote_host'].length-1) do | zahl |
+         		Net::FTP.open(transfer_config['remote_host'][zahl]) do |ftp|
+           		ftp.login(transfer_config['user_name'][zahl], transfer_config['password'][zahl])
+           		files = ftp.chdir(transfer_config['directory'][zahl])
+           		ftp.putbinaryfile(source_file, destination_file)
+           		end
+           	end
+        else
+           	Net::FTP.open(transfer_config['remote_host']) do |ftp|
+           	ftp.login(transfer_config['user_name'], transfer_config['password'])
+           	files = ftp.chdir(transfer_config['directory'])
+           	ftp.putbinaryfile(source_file, destination_file)
+		end
+		end
        when 'scp'
          require 'net/scp'
          if transfer_config.has_key?('password')
-           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, transfer_config['directory'] + '/' + destination_file, :password => transfer_config['password'])
+           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, "#{transfer_config['directory']}/#{destination_file}", :password => transfer_config['password'])
          else
-           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, transfer_config['directory'] + '/' + destination_file)
+           Net::SCP.upload!(transfer_config['remote_host'], transfer_config['user_name'], source_file, "#{transfer_config['directory']}/#{destination_file}")
          end
        when 's3'
          require 'right_aws'
@@ -178,6 +199,14 @@ class HSTransfer
          @log.debug("Content type: #{content_type}")
 
          s3.put(transfer_config['bucket_name'], "#{transfer_config['key_prefix']}/#{destination_file}", File.open(source_file), {'x-amz-acl' => 'public-read', 'content-type' => content_type})
+    	when 'cf'
+         require 'cloudfiles'
+         cf = CloudFiles::Connection.new(:username => transfer_config['username'], :api_key => transfer_config['api_key'])
+  
+         container = cf.container(transfer_config['container'])
+         
+         object = container.create_object "#{transfer_config['key_prefix']}/#{destination_file}", false
+         object.write File.open(source_file)
        else
          @log.error("Unknown transfer type: #{transfer_config['transfer_type']}")
      end
