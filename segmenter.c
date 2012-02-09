@@ -14,6 +14,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
+
+/**********************************************************************************
+ * This code is part of HTTP-Live-Video-Stream-Segmenter-and-Distributor
+ * look for newer versions at github.com
+ **********************************************************************************/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,241 +31,26 @@
 
 #define IMAGE_ID3_SIZE 9171
 
-void printUsage() {
-    fprintf(stderr, "\nExample: segmenter --i infile --d baseDir --f baseFileName --o playListFile.m3u8 --l 10 \n");
-    fprintf(stderr, "\nOptions: \n");
-    fprintf(stderr, "--i <infile>.\n");
-    fprintf(stderr, "--o <outfile>.\n");
-    fprintf(stderr, "--d basedir, the base directory for files.\n");
-    fprintf(stderr, "--f baseFileName, output files will be baseFileName-#.\n");
-    fprintf(stderr, "--l segment length, the length of each segment.\n");
-    fprintf(stderr, "--a,  audio only decode for < 64k streams.\n");
-    fprintf(stderr, "--v,  video only decode for < 64k streams.\n");
-    fprintf(stderr, "--version, print version details and exit.\n");
-    fprintf(stderr, "\n\n");
-}
 
 void ffmpeg_version() {
+	printBanner();
     // output build and version numbers
+    fprintf(stderr, "libav versions:\n");
     fprintf(stderr, "  libavutil version:   %s\n", AV_STRINGIFY(LIBAVUTIL_VERSION));
     fprintf(stderr, "  libavutil build:     %d\n", LIBAVUTIL_BUILD);
     fprintf(stderr, "  libavcodec version:  %s\n", AV_STRINGIFY(LIBAVCODEC_VERSION));
     fprintf(stdout, "  libavcodec build:    %d\n", LIBAVCODEC_BUILD);
     fprintf(stderr, "  libavformat version: %s\n", AV_STRINGIFY(LIBAVFORMAT_VERSION));
     fprintf(stderr, "  libavformat build:   %d\n", LIBAVFORMAT_BUILD);
-    fprintf(stderr, "  built on " __DATE__ " " __TIME__);
+	
+    fprintf(stderr, "This tool is version " PROGRAM_VERSION ",  built on " __DATE__ " " __TIME__);
 #ifdef __GNUC__
-    fprintf(stderr, ", gcc: " __VERSION__ "\n");
+    fprintf(stderr, ", with gcc: " __VERSION__ "\n");
 #else
     fprintf(stderr, ", using a non-gcc compiler\n");
 #endif
 }
 
-inputOption getNextOption(int argc, const char * argv[], char * option) {
-    static int optionIndex = 1;
-
-    if (optionIndex >= argc)
-        return NO_MORE_OPTIONS;
-
-    if (argv[optionIndex][2] == 'i') {
-        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
-        option[MAX_FILENAME_LENGTH - 1] = 0;
-
-        //check for valid file name
-        if (!isalpha(option[0]) && !isdigit(option[0]) && option[0] != '-' && option[0] != '/') {
-            printf("ERROR: input filename must start with alpha or digit\n");
-            return INVALID;
-        }
-
-        optionIndex++;
-        return INPUT_FILE;
-    }
-
-    if (argv[optionIndex][2] == 'o') {
-        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
-
-        //check for valid file name
-        if (!isalpha(option[0]) && !isdigit(option[0]) && option[0] != '-' && option[0] != '/') {
-            printf("ERROR: output filename must start with alpha or digit\n");
-            return INVALID;
-        }
-
-        if (option[0] != '-' && strncmp(option + (strlen(option) - 5), ".m3u8", 5) != 0) {
-            printf("ERROR: output file extension must be .m3u8\n\n");
-            return INVALID;
-        }
-
-        optionIndex++;
-        return OUTPUT_FILE;
-    }
-
-    if (argv[optionIndex][2] == 'd') {
-        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
-
-        //make sure it ends in a slash
-        int l = strlen(option);
-        if (option[l - 1] != '/') {
-            option[l] = '/';
-            option[l + 1] = 0;
-        }
-
-        //check for valid file name
-        if (!isalpha(option[0]) && !isdigit(option[0]) && option[0] != '-' && option[0] != '/') {
-            printf("ERROR: output directory must start with alpha or digit\n");
-            return INVALID;
-        }
-
-        optionIndex++;
-        return OUTPUT_DIR;
-    }
-
-
-    if (argv[optionIndex][2] == 'f') {
-
-        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
-
-        //check for valid file name
-        if (!isalpha(option[0]) && !isdigit(option[0])) {
-            printf("ERROR: output base filename must start with alpha or digit\n");
-            return INVALID;
-        }
-
-        optionIndex++;
-        return OUTPUT_BASE_NAME;
-    }
-
-    if (argv[optionIndex][2] == 'a') {
-        optionIndex++;
-        return OUTPUT_AUDIO_ONLY;
-    }
-
-    if (argv[optionIndex][2] == 'v' && argv[optionIndex][3] == 'e') {
-        optionIndex++;
-        return VERSION;
-    }
-
-
-    if (argv[optionIndex][2] == 'l') {
-        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
-        option[MAX_FILENAME_LENGTH - 1] = 0;
-
-        int a = strtol(option, NULL, 10);
-        if (a == 0 && errno != 0) {
-            printf("ERROR: length must be an integer.\n");
-            return INVALID;
-        }
-
-        if (a <= 2) {
-            fprintf(stderr, "Segment duration time must be > 2.\n");
-            return INVALID;
-        }
-
-        optionIndex++;
-        return SEGMENT_LENGTH;
-    }
-
-    if (argv[optionIndex][2] == 'v') {
-        optionIndex++;
-        return OUTPUT_VIDEO_ONLY;
-    }
-
-    return INVALID;
-}
-
-//assumes that the pointers have allocated memory
-
-int parseCommandLine(char * inputFile, char * outputFile, char * baseDir, char * baseName, char * baseExtension, int * outputStreams, int * segmentLength, int * verbosity, int * version, int argc, const char * argv[]) {
-
-    int requiredOptions[5] = {0, 0, 0, 0, 0};
-
-    inputOption result;
-    char option[MAX_FILENAME_LENGTH];
-
-    //default video and audio output
-    *verbosity = 0;
-    *version = 0;
-    *outputStreams = OUTPUT_STREAM_AUDIO | OUTPUT_STREAM_VIDEO;
-    strncpy(baseExtension, ".ts", strlen(".ts"));
-
-    while (1) {
-        result = getNextOption(argc, argv, option);
-        switch (result) {
-            case INPUT_FILE:
-                strncpy(inputFile, option, MAX_FILENAME_LENGTH);
-                requiredOptions[INPUT_FILE_INDEX] = 1;
-                break;
-            case OUTPUT_FILE:
-                strncpy(outputFile, option, MAX_FILENAME_LENGTH);
-                requiredOptions[OUTPUT_FILE_INDEX] = 1;
-                break;
-            case OUTPUT_DIR:
-                strncpy(baseDir, option, MAX_FILENAME_LENGTH);
-                requiredOptions[OUTPUT_DIR_INDEX] = 1;
-                break;
-            case OUTPUT_BASE_NAME:
-                strncpy(baseName, option, MAX_FILENAME_LENGTH);
-                requiredOptions[OUTPUT_BASE_NAME_INDEX] = 1;
-                break;
-            case OUTPUT_AUDIO_ONLY:
-                *outputStreams = 1;
-                strncpy(baseExtension, ".aac", strlen(".aac"));
-                break;
-            case OUTPUT_VIDEO_ONLY:
-                *outputStreams = 2;
-                break;
-            case SEGMENT_LENGTH:
-                *segmentLength = strtol(option, NULL, 10);
-                requiredOptions[OUTPUT_SEGMENT_LENGTH_INDEX] = 1;
-            case OUTPUT_VERBOSITY:
-                *verbosity = strtol(option, NULL, 10);
-                break;
-            case VERSION:
-                *version = 1;
-                return 0;
-            case NO_MORE_OPTIONS:
-            {
-                if (*version == 1)
-                    return 0;
-
-                int missing = 0;
-
-                if (requiredOptions[INPUT_FILE_INDEX] == 0) {
-                    fprintf(stderr, "\nMissing required option --i for input file.\n");
-                    missing = 1;
-                }
-                if (requiredOptions[OUTPUT_FILE_INDEX] == 0) {
-                    fprintf(stderr, "\nMissing required option --o for output playlist file.\n");
-                    missing = 1;
-                }
-                if (requiredOptions[OUTPUT_DIR_INDEX] == 0) {
-                    fprintf(stderr, "\nMissing required option --d for output base directory.\n");
-                    missing = 1;
-                }
-                if (requiredOptions[OUTPUT_BASE_NAME_INDEX] == 0) {
-                    fprintf(stderr, "\nMissing required option --f for file base name.\n");
-                    missing = 1;
-                }
-                if (requiredOptions[OUTPUT_SEGMENT_LENGTH_INDEX] == 0) {
-                    fprintf(stderr, "\nMissing required option --l for segment length.\n");
-                    missing = 1;
-                }
-
-                if (missing == 1) {
-                    printUsage();
-                    return -1;
-                }
-
-                return 0;
-            }
-            case INVALID:
-            default:
-                printUsage();
-                return -1;
-        }
-    }
-
-    return 0;
-}
 
 void build_id3_tag(char * id3_tag, size_t max_size) {
     int i;
@@ -568,7 +359,7 @@ int main(int argc, const char *argv[]) {
     //input parameters
     char inputFilename[MAX_FILENAME_LENGTH], playlistFilename[MAX_FILENAME_LENGTH], baseDirName[MAX_FILENAME_LENGTH], baseFileName[MAX_FILENAME_LENGTH];
     char baseFileExtension[5]; //either "ts", "aac" or "mp3"
-    int segmentLength, outputStreams, verbosity, version;
+    int segmentLength, outputStreams, verbosity, version,usage,doid3;
 
 
 
@@ -607,22 +398,21 @@ int main(int argc, const char *argv[]) {
     size_t id3_tag_size = 73;
     int newFile = 1; //a boolean value to flag when a new file needs id3 tag info in it
 
-    if (parseCommandLine(inputFilename, playlistFilename, baseDirName, baseFileName, baseFileExtension, &outputStreams, &segmentLength, &verbosity, &version, argc, argv) != 0)
+    if (parseCommandLine(inputFilename, playlistFilename, baseDirName, baseFileName, baseFileExtension, &outputStreams, &segmentLength, &verbosity, &version,&usage, &doid3,  argc, argv) != 0)
         return 0;
 
-    if (version) {
-        ffmpeg_version();
-        return 0;
-    }
+	if (usage) printUsage();
+    if (version) ffmpeg_version();
+	if (version || usage) return 0;
 
 
     fprintf(stderr, "%s %s\n", playlistFilename, tempPlaylistName);
 
-
-    image_id3_tag = malloc(IMAGE_ID3_SIZE);
-    if (outputStreams == OUTPUT_STREAM_AUDIO)
-        build_image_id3_tag(image_id3_tag);
-    build_id3_tag((char *) id3_tag, id3_tag_size);
+	if (doid3) {
+		image_id3_tag = malloc(IMAGE_ID3_SIZE);
+		if (outputStreams == OUTPUT_STREAM_AUDIO) build_image_id3_tag(image_id3_tag);
+		build_id3_tag((char *) id3_tag, id3_tag_size);
+	}
 
     snprintf(tempPlaylistName, strlen(playlistFilename) + strlen(baseDirName) + 1, "%s%s", baseDirName, playlistFilename);
     strncpy(playlistFilename, tempPlaylistName, strlen(tempPlaylistName));
@@ -690,7 +480,7 @@ int main(int argc, const char *argv[]) {
     }
 
     if (video_index == -1) {
-        fprintf(stderr, "Stream must have video component.\n");
+        fprintf(stderr, "Source stream must have video component.\n");
         exit(1);
     }
 
@@ -849,10 +639,12 @@ int main(int argc, const char *argv[]) {
                 //add id3 tag info
                 //fprintf(stderr, "adding id3tag to file %s\n", currentOutputFileName);
                 //printf("%lf %lld %lld %lld %lld %lld %lf\n", segment_time, audio_st->pts.val, audio_st->cur_dts, audio_st->cur_pkt.pts, packet.pts, packet.dts, packet.dts * av_q2d(ic->streams[audio_index]->time_base) );
-                fill_id3_tag((char*) id3_tag, id3_tag_size, packet.dts);
-                avio_write(oc->pb, id3_tag, id3_tag_size);
-                avio_write(oc->pb, image_id3_tag, IMAGE_ID3_SIZE);
-                avio_flush(oc->pb);
+                if (doid3) {
+					fill_id3_tag((char*) id3_tag, id3_tag_size, packet.dts);
+					avio_write(oc->pb, id3_tag, id3_tag_size);
+					avio_write(oc->pb, image_id3_tag, IMAGE_ID3_SIZE);
+					avio_flush(oc->pb);
+				}
                 newFile = 0;
             }
 
