@@ -46,7 +46,7 @@ FFMpeg is the primary external requirement for the ruby script. The segmenter ne
 
 ## INSTALL
 
-You will need to compile the segmenter first. Assuming that you have all the needed libraries installed this is as easy as doing a make in the root directory. 
+You will need to compile the segmenter first. Assuming that you have all the needed libraries installed this is as easy as doing a cmake . ; make in the root directory. 
 
 You may copy the script and the segmenter binary to any location you want. You will need to let the script know where to find the segmenter binary in the configuration file.
 
@@ -54,7 +54,7 @@ You may copy the script and the segmenter binary to any location you want. You w
 
 On Ubuntu/Debian systems:
 
-$ sudo apt-get install libavutil-dev libavformat-dev
+$ sudo apt-get install libavutil-dev libavformat-dev cmake
 
 ## CONFIGURATION
 
@@ -142,7 +142,9 @@ Transfer profiles are given a name in the same way encoding profiles are and hav
 
 ## LICENSE
 
-Copyright (c) 2009 Carson McDonald
+Copyright (c) 2009 Carson McDonald  
+Copyright (c) 2009 Chase Douglas  
+Copyright (c) 2011 Stoian Ivanov  
 
 This program is free software; you can redistribute it and/or  
 modify it under the terms of the GNU General Public License version 2  
