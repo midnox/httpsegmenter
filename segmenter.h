@@ -43,6 +43,6 @@ extern "C" {
 #endif
 void printBanner();
 void printUsage();
-int parseCommandLine(char * inputFile, char * outputFile, char * baseDir, char * baseName, char * baseExtension, int * outputStreams, int * segmentLength, int * verbosity, int * version, int * usage,int * doid3tag, int argc, const char * argv[]);
+int parseCommandLine(char * inputFile, char * outputFile, char * baseDir, char * baseName, char * baseExtension, char * encodingProfile, char * urlPrefix, int * outputStreams, int * segmentLength, int * verbosity, int * version, int * usage,int * doid3tag, int argc, const char * argv[]);
 
 #endif

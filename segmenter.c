@@ -295,7 +295,7 @@ static AVStream *add_output_stream(AVFormatContext *output_format_context, AVStr
 }
 
 int write_index_file(const char index[], const char tmp_index[], const unsigned int planned_segment_duration, const unsigned int actual_segment_duration[],
-        const char output_directory[], const char output_prefix[], const char output_file_extension[],
+        const char output_directory[], const char url_prefix[], const char output_prefix[], const char output_file_extension[],
         const unsigned int first_segment, const unsigned int last_segment) {
     FILE *index_fp;
     char *write_buf;
@@ -332,7 +332,7 @@ int write_index_file(const char index[], const char tmp_index[], const unsigned 
     }
 
     for (i = first_segment; i <= last_segment; i++) {
-        snprintf(write_buf, 1024, "#EXTINF:%u,\n%s-%u%s\n", actual_segment_duration[i], output_prefix, i, output_file_extension);
+        snprintf(write_buf, 1024, "#EXTINF:%u,\n%s%s-%u%s\n", actual_segment_duration[i], url_prefix, output_prefix, i, output_file_extension);
         if (fwrite(write_buf, strlen(write_buf), 1, index_fp) != 1) {
             fprintf(stderr, "Could not write to m3u8 index file, will not continue writing to index file\n");
             free(write_buf);
@@ -355,9 +355,18 @@ int write_index_file(const char index[], const char tmp_index[], const unsigned 
     return rename(tmp_index, index);
 }
 
+void output_transfer_command(const unsigned int first_segment, const unsigned int last_segment, unsigned int actual_segment_duration, const int end, const char *encoding_profile) {
+  char buffer[1024 * 10];
+  memset(buffer, 0, sizeof(char) * 1024 * 10);
+
+  sprintf(buffer, "%d, %d, %d, %d, %s", first_segment, last_segment, actual_segment_duration, end, encoding_profile);
+
+  fprintf(stderr, "segmenter: %s\n\r", buffer);
+}
+
 int main(int argc, const char *argv[]) {
     //input parameters
-    char inputFilename[MAX_FILENAME_LENGTH], playlistFilename[MAX_FILENAME_LENGTH], baseDirName[MAX_FILENAME_LENGTH], baseFileName[MAX_FILENAME_LENGTH];
+    char inputFilename[MAX_FILENAME_LENGTH], playlistFilename[MAX_FILENAME_LENGTH], baseDirName[MAX_FILENAME_LENGTH], baseFileName[MAX_FILENAME_LENGTH], encodingProfile[MAX_FILENAME_LENGTH], urlPrefix[MAX_FILENAME_LENGTH];
     char baseFileExtension[5]; //either "ts", "aac" or "mp3"
     int segmentLength, outputStreams, verbosity, version,usage,doid3;
 
@@ -398,15 +407,12 @@ int main(int argc, const char *argv[]) {
     size_t id3_tag_size = 73;
     int newFile = 1; //a boolean value to flag when a new file needs id3 tag info in it
 
-    if (parseCommandLine(inputFilename, playlistFilename, baseDirName, baseFileName, baseFileExtension, &outputStreams, &segmentLength, &verbosity, &version,&usage, &doid3,  argc, argv) != 0)
+    if (parseCommandLine(inputFilename, playlistFilename, baseDirName, baseFileName, baseFileExtension, encodingProfile, urlPrefix, &outputStreams, &segmentLength, &verbosity, &version,&usage, &doid3,  argc, argv) != 0)
         return 0;
 
 	if (usage) printUsage();
     if (version) ffmpeg_version();
 	if (version || usage) return 0;
-
-
-    fprintf(stderr, "%s %s\n", playlistFilename, tempPlaylistName);
 
 	if (doid3) {
 		image_id3_tag = malloc(IMAGE_ID3_SIZE);
@@ -418,6 +424,8 @@ int main(int argc, const char *argv[]) {
     strncpy(playlistFilename, tempPlaylistName, strlen(tempPlaylistName));
     strncpy(tempPlaylistName, playlistFilename, MAX_FILENAME_LENGTH);
     strncat(tempPlaylistName, ".", 1);
+    
+    fprintf(stderr, "%s %s\n", playlistFilename, tempPlaylistName);
 
     //decide if this is an aac file or a mpegts file.
     //postpone deciding format until later
@@ -431,6 +439,11 @@ int main(int argc, const char *argv[]) {
     av_log_set_level(AV_LOG_DEBUG);
 
     av_register_all();
+    
+    if (!strcmp(inputFilename, "-")) {
+        strcpy(inputFilename, "pipe:");
+    }
+    
     ret = avformat_open_input(&ic, inputFilename, NULL, NULL);
     if (ret != 0) {
         fprintf(stderr, "Could not open input file %s. Error %d.\n", inputFilename, ret);
@@ -563,7 +576,7 @@ int main(int argc, const char *argv[]) {
     }
 
     //no segment info is written here. This just creates the shell of the playlist file
-    write_index = !write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, baseFileName, baseFileExtension, first_segment, last_segment);
+    write_index = !write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, urlPrefix, baseFileName, baseFileExtension, first_segment, last_segment);
 
     do {
         AVPacket packet;
@@ -616,8 +629,9 @@ int main(int argc, const char *argv[]) {
 
             if (write_index) {
                 actual_segment_durations[++last_segment] = (unsigned int) rint(segment_time - prev_segment_time);
-                write_index = !write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, baseFileName, baseFileExtension, first_segment, last_segment);
+                write_index = !write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, urlPrefix, baseFileName, baseFileExtension, first_segment, last_segment);
                 fprintf(stderr, "Writing index file at time %lf\n", packet_time);
+                output_transfer_command(first_segment, last_segment, actual_segment_durations[last_segment], 0, encodingProfile);
             }
 
             struct stat st;
@@ -704,11 +718,13 @@ int main(int argc, const char *argv[]) {
         if (actual_segment_durations[last_segment] == 0)
             actual_segment_durations[last_segment] = 1;
 
-        write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, baseFileName, baseFileExtension, first_segment, last_segment);
-
+        write_index_file(playlistFilename, tempPlaylistName, segmentLength, actual_segment_durations, baseDirName, urlPrefix, baseFileName, baseFileExtension, first_segment, last_segment);
+        
+        output_transfer_command(first_segment, last_segment, actual_segment_durations[last_segment],  1, encodingProfile);
     }
 
     write_stream_size_file(baseDirName, baseFileName, output_bytes * 8 / segment_time);
+    
 
     return 0;
 }

@@ -136,7 +136,7 @@ class HSTransfer
       first_segment.upto(last_segment) do | segment_index |
         if segment_index > last_segment - index_segment_count
           index_file.write("#EXTINF:#{segment_duration},\n")
-          index_file.write("#{http_prefix}#{output_prefix}_#{encoding_profile}-%05u.ts\n" % segment_index)
+          index_file.write("#{http_prefix}#{output_prefix}_#{encoding_profile}-%u.ts\n" % segment_index)
         end
       end
 
@@ -147,16 +147,17 @@ class HSTransfer
   end
 
   def create_index_and_run_transfer(value)
-    (first_segment, last_segment, stream_end, encoding_profile) = value.strip.split(%r{,\s*})
-    create_index(@config['index_segment_count'], @config['segment_length'], @config['segment_prefix'], encoding_profile, @config['url_prefix'], first_segment.to_i, last_segment.to_i, stream_end.to_i == 1)
+    (first_segment, last_segment, actual_segment_duration, stream_end, encoding_profile) = value.strip.split(%r{,\s*})
+    #create_index(@config['index_segment_count'], @config['segment_length'], @config['segment_prefix'], encoding_profile, @config['url_prefix'], first_segment.to_i, last_segment.to_i, stream_end.to_i == 1)
 
     # Transfer the index
     final_index = "%s_%s.m3u8" % [@config['index_prefix'], encoding_profile]
-    transfer_file("tmp.index.#{encoding_profile}.m3u8", "#{final_index}")
+    #transfer_file("tmp.index.#{encoding_profile}.m3u8", "#{final_index}")
+    transfer_file("#{@config['temp_dir']}/#{final_index}", final_index)
 
     # Transfer the video stream
-    video_filename = "#{@config['temp_dir']}/#{@config['segment_prefix']}_#{encoding_profile}-%05u.ts" % last_segment.to_i
-    dest_video_filename = "#{@config['segment_prefix']}_#{encoding_profile}-%05u.ts" % last_segment.to_i
+    video_filename = "#{@config['temp_dir']}/#{@config['segment_prefix']}_#{encoding_profile}-%u.ts" % last_segment.to_i
+    dest_video_filename = "#{@config['segment_prefix']}_#{encoding_profile}-%u.ts" % last_segment.to_i
     transfer_file(video_filename, dest_video_filename)
   end
 

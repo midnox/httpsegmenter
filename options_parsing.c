@@ -32,7 +32,7 @@
 #include "segmenter.h"
 //Type of options detected
 typedef enum {
-	INPUT_FILE, OUTPUT_FILE, OUTPUT_DIR, OUTPUT_BASE_NAME,SEGMENT_LENGTH,
+	INPUT_FILE, OUTPUT_FILE, OUTPUT_DIR, OUTPUT_BASE_NAME, SEGMENT_LENGTH, ENCODING_PROFILE, URL_PREFIX,
 	
 	OUTPUT_AUDIO_ONLY,OUTPUT_VIDEO_ONLY,OUTPUT_VERBOSITY,ENABLE_ID3TAGS,
 	
@@ -65,6 +65,8 @@ void printUsage() {
 	fprintf(stderr, "-d <basedir>\t\tThe base directory for files. Default is  '.'\n");
 	fprintf(stderr, "-f <baseFileName>\tSegment files will be named <baseFileName>-#. Default is <infile>\n");
 	fprintf(stderr, "-l <segment length>\tThe length of each segment. Default is 5\n");
+	fprintf(stderr, "-p <encoding profile>\t\tThe name of the encoding profile\n");
+	fprintf(stderr, "-u <url prefix>\t\tThe URL prefix\n");
 	fprintf(stderr, "-t\t\t\tEnable id3 tagging code (EXPERIMENTAL)\n");
 	fprintf(stderr, "-a\t\t\taudio only decode for < 64k streams.\n");
 	fprintf(stderr, "-v\t\t\tvideo only decode for < 64k streams.\n\n");
@@ -165,6 +167,30 @@ inputOption getNextOption(int argc, const char * argv[], char * option) {
         optionIndex++;
         return OUTPUT_BASE_NAME;
     }
+    
+    if (strcmp(argv[optionIndex],"-p")==0 || strcmp(argv[optionIndex],"--p")==0) {
+		if (!hasnext){
+            fprintf(stderr,"ERROR: encoding profile must be given after -p\n");
+            return INVALID;
+		}
+		
+        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
+
+        optionIndex++;
+        return ENCODING_PROFILE;
+    }
+
+    if (strcmp(argv[optionIndex],"-u")==0 || strcmp(argv[optionIndex],"--u")==0) {
+		if (!hasnext){
+            fprintf(stderr,"ERROR: url prefix must be given after -u\n");
+            return INVALID;
+		}
+		
+        strncpy(option, argv[++optionIndex], MAX_FILENAME_LENGTH - 1);
+
+        optionIndex++;
+        return URL_PREFIX;
+    }
 
     if (strcmp(argv[optionIndex],"-a")==0 || strcmp(argv[optionIndex],"--a")==0) {
         optionIndex++;
@@ -224,11 +250,12 @@ inputOption getNextOption(int argc, const char * argv[], char * option) {
 #define OUTPUT_DIR_INDEX 2
 #define OUTPUT_BASE_NAME_INDEX 3
 #define OUTPUT_SEGMENT_LENGTH_INDEX 4
+#define ENCODING_PROFILE_INDEX 5
 
 //assumes that the pointers have allocated memory
 
 int parseCommandLine(
-	char * inputFile, char * outputFile, char * baseDir, char * baseName, char * baseExtension, 
+	char * inputFile, char * outputFile, char * baseDir, char * baseName, char * baseExtension, char * encodingProfile, char * urlPrefix,
 	int * outputStreams, int * segmentLength, int * verbosity, int * version, int * usage, int * doid3tag,
 	
 	int argc, const char * argv[]
@@ -236,6 +263,8 @@ int parseCommandLine(
 	printBanner();
 	
     int requiredOptions[5] = {0, 0, 0, 0, 0};
+    encodingProfile[0] = '\0';
+    urlPrefix[0] = '\0';
 
     inputOption result;
     char option[MAX_FILENAME_LENGTH];
@@ -246,7 +275,7 @@ int parseCommandLine(
 	*usage = 0;
 	*doid3tag = 0;
     *outputStreams = OUTPUT_STREAM_AV;
-    strncpy(baseExtension, ".ts", strlen(".ts"));
+    strncpy(baseExtension, ".ts", strlen(".ts")+1);
 
     while (1) {
         result = getNextOption(argc, argv, option);
@@ -266,6 +295,12 @@ int parseCommandLine(
             case OUTPUT_BASE_NAME:
                 strncpy(baseName, option, MAX_FILENAME_LENGTH);
                 requiredOptions[OUTPUT_BASE_NAME_INDEX] = 1;
+                break;
+            case ENCODING_PROFILE:
+                strncpy(encodingProfile, option, MAX_FILENAME_LENGTH);
+                break;
+            case URL_PREFIX:
+                strncpy(urlPrefix, option, MAX_FILENAME_LENGTH);
                 break;
             case OUTPUT_AUDIO_ONLY:
 				if (*outputStreams != OUTPUT_STREAM_AV) {

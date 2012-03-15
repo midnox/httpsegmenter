@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-require 'hs_transfer'
+require './hs_transfer.rb'
 
 require 'thread'
 require 'fileutils'
@@ -134,7 +134,8 @@ class HSEncoder
   def process_encoding(encoding_profile, input_location, encoding_pipes)
     encoding_config = @config[encoding_profile]
 
-    command_ffmpeg = encoding_config['ffmpeg_command'] % [input_location, @config['segmenter_binary'], @config['segment_length'], @config['temp_dir'], "#{@config['segment_prefix']}_#{encoding_profile}", encoding_profile]
+    final_index = "%s_%s.m3u8" % [@config['index_prefix'], encoding_profile]
+    command_ffmpeg = encoding_config['ffmpeg_command'] % [input_location, @config['segmenter_binary'], @config['segment_length'], @config['temp_dir'], "#{@config['segment_prefix']}_#{encoding_profile}", encoding_profile, final_index, "'#{@config['url_prefix']}'"]
 
     begin
       execute_ffmpeg_and_segmenter(command_ffmpeg, encoding_profile, encoding_pipes)
@@ -143,7 +144,7 @@ class HSEncoder
     end
   end
 
-  def run_multirate_encoding( encoding_threads )
+  def run_multirate_encoding_piped( encoding_threads )
     # Have the transfer thread create and transfer the multirate index
     @hs_transfer << HSTransfer::MULTIRATE_INDEX
   
@@ -178,6 +179,26 @@ class HSEncoder
       end
 
       @log.info('Master encoding thread terminated');
+    end
+  end
+  
+  def run_multirate_encoding( encoding_threads )
+    # Have the transfer thread create and transfer the multirate index
+    @hs_transfer << HSTransfer::MULTIRATE_INDEX
+
+    # Start a new thread for each encoding profile
+    @config['encoding_profile'].each do |profile_name|
+      encoding_threads << Thread.new do
+        @log.info("Encoding thread started: #{profile_name}");
+
+        process_encoding(profile_name, @config['input_location'], nil)
+
+        @log.info("Encoding thread terminated: #{profile_name}");
+      end
+    end
+
+    encoding_threads.each do |thread|
+      thread.join
     end
   end
 
