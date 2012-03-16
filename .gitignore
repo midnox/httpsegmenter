@@ -6,3 +6,4 @@ segmenter
 segmenter.pid
 test/
 Makefile
+install_manifest.txt
