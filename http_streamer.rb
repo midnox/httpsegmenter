@@ -16,9 +16,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-require './hs_transfer.rb'
-require './hs_config.rb'
-require './hs_encoder.rb'
+require File.dirname(__FILE__) + '/hs_transfer.rb'
+require File.dirname(__FILE__) + '/hs_config.rb'
+require File.dirname(__FILE__) + '/hs_encoder.rb'
 
 # **************************************************************
 #

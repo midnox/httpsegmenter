@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
-require './hs_transfer.rb'
+require File.dirname(__FILE__) + '/hs_transfer.rb'
 
 require 'thread'
 require 'fileutils'
