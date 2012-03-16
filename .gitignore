@@ -5,3 +5,4 @@ CMakeFiles/
 segmenter
 segmenter.pid
 test/
+Makefile

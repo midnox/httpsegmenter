@@ -723,7 +723,7 @@ int main(int argc, const char *argv[]) {
         output_transfer_command(first_segment, last_segment, actual_segment_durations[last_segment],  1, encodingProfile);
     }
 
-    write_stream_size_file(baseDirName, baseFileName, output_bytes * 8 / segment_time);
+    //write_stream_size_file(baseDirName, baseFileName, output_bytes * 8 / segment_time);
     
 
     return 0;
