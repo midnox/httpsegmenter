@@ -604,7 +604,7 @@ int main(int argc, const char *argv[]) {
         if (packet.stream_index == video_index && (packet.flags & AV_PKT_FLAG_KEY))
 #endif		
         {
-            segment_time = (double) packet.pts * ic->streams[video_index]->time_base.num / ic->streams[video_index]->time_base.den;
+            segment_time = (double) video_st->pts.val * video_st->time_base.num / video_st->time_base.den; //packet.pts * ic->streams[video_index]->time_base.num / ic->streams[video_index]->time_base.den;
         }
         //  else if (video_index < 0) 
         //	{
@@ -615,7 +615,7 @@ int main(int argc, const char *argv[]) {
         //this time is used when the time for the final segment is printed. It may not be on the edge of
         //of a keyframe!
         if (packet.stream_index == video_index)
-            packet_time = (double) packet.pts * ic->streams[video_index]->time_base.num / ic->streams[video_index]->time_base.den; //(double)video_st->pts.val * video_st->time_base.num / video_st->time_base.den;
+            packet_time = (double) video_st->pts.val * video_st->time_base.num / video_st->time_base.den; //packet.pts * ic->streams[video_index]->time_base.num / ic->streams[video_index]->time_base.den;
         else if (outputStreams & OUTPUT_STREAM_AUDIO)
             packet_time = (double) audio_st->pts.val * audio_st->time_base.num / audio_st->time_base.den;
         else
@@ -712,7 +712,7 @@ int main(int argc, const char *argv[]) {
 
 
     if (write_index) {
-        actual_segment_durations[++last_segment] = (unsigned int) rint(packet_time - prev_segment_time);
+        actual_segment_durations[++last_segment] = (unsigned int) floor(segment_time - prev_segment_time);
 
         //make sure that the last segment length is not zero
         if (actual_segment_durations[last_segment] == 0)
